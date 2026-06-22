@@ -1,0 +1,558 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAJOR UNIVERSE — 서사형 웹앱 프로토타입 v2</title>
+<style>
+  :root{
+    --deep:#0a1545;--mid:#15246e;--royal:#1f3b8f;--ice:#9fc4ff;
+    --star:#dbe8ff;--gold:#e8d9a8;--line:rgba(159,196,255,.28);
+    --glow:rgba(120,170,255,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',-apple-system,'Segoe UI',Roboto,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    background:radial-gradient(1200px 800px at 50% -10%,#21307e 0%,#0a1545 55%,#060d2e 100%);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    padding:32px 16px;color:var(--star);
+  }
+  .phone{width:390px;max-width:100%;height:800px;border-radius:44px;
+    background:linear-gradient(180deg,#0c1a52,#070f33);
+    box-shadow:0 40px 120px rgba(0,0,0,.6),inset 0 0 0 2px rgba(159,196,255,.18),
+      0 0 0 12px #05091f,0 0 0 13px rgba(159,196,255,.12);
+    position:relative;overflow:hidden;display:flex;flex-direction:column}
+  .notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    width:120px;height:26px;background:#05091f;border-radius:16px;z-index:30}
+  .stars{position:absolute;inset:0;z-index:0;pointer-events:none}
+  .stars i{position:absolute;background:var(--star);border-radius:50%;
+    opacity:.5;animation:tw 3.5s infinite ease-in-out}
+  @keyframes tw{0%,100%{opacity:.18}50%{opacity:.9}}
+  .screen{position:relative;z-index:5;flex:1;display:flex;flex-direction:column;
+    padding:46px 22px 12px;overflow:hidden}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    font-size:11px;letter-spacing:.1em;color:var(--ice);opacity:.8;margin-bottom:6px}
+  .top .brand{flex:none}
+  .top #zone{font-size:8.5px;letter-spacing:.16em;white-space:nowrap;text-align:right}
+  .brand{font-family:'Times New Roman',Georgia,serif;font-weight:600;letter-spacing:.04em}
+  .brand b{color:#fff}
+  .planet{width:6px;height:6px;border-radius:50%;background:var(--gold);
+    box-shadow:0 0 8px var(--gold);display:inline-block;margin-left:6px}
+  .prog{display:flex;gap:5px;margin:8px 0 10px}
+  .prog span{flex:1;height:3px;border-radius:2px;background:rgba(159,196,255,.18)}
+  .prog span.on{background:linear-gradient(90deg,var(--ice),#fff);box-shadow:0 0 10px var(--glow)}
+  /* fixed mini route map (always-on header) */
+  .minimap{height:0;overflow:hidden;transition:height .45s ease;
+    border:1px solid transparent;border-radius:18px;margin-bottom:10px}
+  .minimap.show{height:300px;border-color:var(--line);
+    background:
+      radial-gradient(circle at 50% 52%, rgba(28,48,120,.55), rgba(6,12,42,.5) 70%)}
+  .minimap .mmhead{display:flex;justify-content:space-between;align-items:center;
+    padding:9px 14px 0;font-size:9.5px;letter-spacing:.14em;color:var(--ice);opacity:.78}
+  .minimap svg{width:100%;height:268px;display:block}
+  .stage{flex:1;display:flex;flex-direction:column;justify-content:center;
+    gap:12px;position:relative;overflow-y:auto}
+  .stage::-webkit-scrollbar{display:none}
+  .tag{display:inline-block;font-size:10px;letter-spacing:.16em;padding:3px 9px;
+    border:1px solid var(--line);border-radius:20px;color:var(--ice);opacity:.8;margin-bottom:2px}
+  .who{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+  .avatar{width:30px;height:30px;border-radius:50%;flex:none;
+    background:radial-gradient(circle at 35% 30%,#34488f,#0c143f);
+    border:1px solid var(--line);display:grid;place-items:center;
+    font-weight:700;color:var(--ice);font-size:13px;box-shadow:0 0 16px rgba(120,170,255,.4)}
+  .who small{font-size:11px;letter-spacing:.1em;color:var(--ice);opacity:.75}
+  .bubble{background:linear-gradient(180deg,rgba(35,55,130,.7),rgba(18,30,85,.7));
+    border:1px solid var(--line);border-radius:6px 16px 16px 16px;padding:13px 15px;
+    font-size:14.5px;line-height:1.62;color:#eaf1ff;backdrop-filter:blur(4px);animation:rise .5s ease both}
+  .bubble+.bubble{margin-top:8px}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .reveal .bubble{border-color:rgba(232,217,168,.5);
+    background:linear-gradient(180deg,rgba(60,52,30,.55),rgba(30,30,70,.7))}
+  .display{font-family:'Times New Roman',Georgia,serif;line-height:1.02;text-align:center}
+  .display .uni{font-size:38px;letter-spacing:.02em;color:#fff;text-shadow:0 0 30px var(--glow)}
+  .display .sub{display:block;font-size:12.5px;letter-spacing:.4em;
+    font-family:Inter,sans-serif;color:var(--ice);margin-top:13px;opacity:.85}
+  .book{font-size:54px;text-align:center;filter:drop-shadow(0 0 24px var(--glow))}
+  .form{display:flex;flex-direction:column;gap:10px}
+  .field label{display:block;font-size:11px;letter-spacing:.06em;color:var(--ice);
+    opacity:.8;margin-bottom:5px}
+  .field input{width:100%;background:rgba(8,16,52,.7);border:1px solid var(--line);
+    border-radius:10px;padding:12px 13px;color:#fff;font-size:14px;outline:none}
+  .field input:focus{border-color:var(--ice);box-shadow:0 0 0 3px rgba(120,170,255,.18)}
+  .field input::placeholder{color:rgba(159,196,255,.4)}
+  .card{background:rgba(12,22,72,.62);border:1px solid var(--line);border-radius:14px;
+    padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;
+    transition:.18s;font-size:13.5px;color:#eaf1ff}
+  .card:hover{border-color:var(--ice);transform:translateX(3px);background:rgba(28,45,110,.7)}
+  .card .ic{width:34px;height:34px;border-radius:9px;flex:none;display:grid;place-items:center;
+    font-size:17px;background:rgba(159,196,255,.12)}
+  .card .meta{font-size:11px;color:var(--ice);opacity:.7;margin-top:2px}
+  .cards{display:flex;flex-direction:column;gap:9px}
+  .signals{display:flex;justify-content:center;gap:9px;margin:4px 0}
+  .signals b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+    border:1px solid var(--line);font-size:13px;color:var(--ice);background:rgba(12,22,72,.6);transition:.3s}
+  .signals b.fill{background:radial-gradient(circle at 40% 35%,var(--ice),#1f3b8f);
+    color:#06122f;border-color:var(--ice);box-shadow:0 0 14px var(--glow)}
+  .routewrap{position:relative;height:230px;margin:6px 0}
+  .routewrap svg{width:100%;height:100%}
+  .plabel{font-size:10px;fill:var(--ice);opacity:.85}
+  .scan-hint{text-align:center;font-size:11px;color:var(--ice);opacity:.6;margin-top:2px}
+  .nav{display:flex;gap:10px;padding:12px 22px 22px;z-index:6}
+  .btn{flex:1;border:none;border-radius:13px;padding:14px;font-size:14px;font-weight:600;
+    cursor:pointer;letter-spacing:.02em;transition:.16s}
+  .btn.primary{background:linear-gradient(180deg,#a9c8ff,#5f86e6);color:#06122f;
+    box-shadow:0 8px 24px rgba(95,134,230,.5)}
+  .btn.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .btn.primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ice);flex:0 0 84px}
+  .btn.ghost:hover{border-color:var(--ice)}
+  .step-label{position:absolute;top:46px;right:22px;font-size:10px;letter-spacing:.2em;
+    color:var(--ice);opacity:.55;z-index:7}
+  .hint{font-size:11px;color:var(--ice);opacity:.55;text-align:center;margin-top:2px}
+  h2.q{font-size:19px;color:#fff;text-align:center;font-weight:600;letter-spacing:.01em}
+</style>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="stars" id="stars"></div>
+  <div class="step-label" id="stepLabel"></div>
+  <div class="screen">
+    <div class="top">
+      <span class="brand"><b>MAJOR</b> UNIVERSE<span class="planet"></span></span>
+      <span id="zone"></span>
+    </div>
+    <div class="prog" id="prog"></div>
+    <div class="minimap" id="minimap">
+      <div class="mmhead"><span>나의 항로</span><span id="mmcount">0 / 3 행성</span></div>
+      <div id="mmsvg"></div>
+    </div>
+    <div class="stage" id="stage"></div>
+  </div>
+  <div class="nav">
+    <button class="btn ghost" id="back">이전</button>
+    <button class="btn primary" id="next">시작하기</button>
+  </div>
+</div>
+
+<script>
+const sw=document.getElementById('stars');
+for(let i=0;i<46;i++){const s=document.createElement('i');const sz=Math.random()*2.4+0.6;
+  s.style.width=s.style.height=sz+'px';s.style.left=Math.random()*100+'%';
+  s.style.top=Math.random()*100+'%';s.style.animationDelay=(Math.random()*3.5)+'s';sw.appendChild(s);}
+
+const A='<div class="who"><div class="avatar">?</div><small>??? 가 메시지를 보냈어요</small></div>';
+
+// 전공별 색조 (살짝 다른 행성 느낌) — 300x300 정사각 캔버스 기준
+const PLANETS=[
+  {x:95,y:205,name:'경제학부', c1:'#ffe6b3', c2:'#c98a3a', ring:true,
+   desc:'시장과 인간의 선택을 수로 읽는 전공. 데이터·정책·금융으로 뻗어나가는 항로의 출발점.'},
+  {x:165,y:108,name:'데이터사이언스', c1:'#cfe4ff', c2:'#3f6bd6', ring:false,
+   desc:'통계·컴퓨팅·도메인 지식이 만나는 융합 전공. 경제학부와 시너지가 높아 교수 추천 항로로 자주 묶임.'},
+  {x:232,y:178,name:'심리학과', c1:'#f3d4ff', c2:'#9a5bd0', ring:false,
+   desc:'사람의 행동과 마음을 실험으로 검증하는 전공. 데이터·UX·HCI로 이어지는 인기 항로.'},
+];
+
+// count: 등록된 행성 수 / seeking: 다음 경로 탐색 점선 / animate: 우주선 항행
+function planetSvg(count, opt){
+  opt=opt||{};
+  const seeking=opt.seeking, animate=opt.animate;
+  const W=300,H=300, cx=160, cy=156;
+  let defs='', body='';
+
+  // --- nebula glow backdrop ---
+  body+=`<ellipse cx="${cx}" cy="${cy}" rx="150" ry="140" fill="url(#neb)" opacity=".5"/>`;
+
+  // --- "막막한 별바다": 행성이 없을수록 빽빽하고 밝게, 채울수록 옅어짐 ---
+  (function(){
+    const seed=[
+      [42,60],[78,42],[120,30],[180,38],[225,58],[262,48],[285,92],[40,110],
+      [25,150],[55,200],[95,250],[140,260],[195,255],[245,250],[278,210],[290,150],
+      [70,90],[110,70],[150,55],[200,72],[238,100],[262,140],[60,135],[88,170],
+      [130,140],[175,160],[210,135],[238,200],[120,210],[165,225],[95,120],[200,190],
+      [35,85],[270,175],[150,120],[112,185],[208,108],[252,78],[48,175],[155,200],
+      [62,72],[100,48],[138,40],[170,28],[215,42],[248,62],[278,120],[32,128],
+      [48,165],[72,225],[118,242],[162,250],[210,238],[258,228],[288,180],[300,118],
+      [85,108],[128,92],[158,78],[188,95],[222,82],[256,108],[75,152],[102,200],
+      [148,185],[182,205],[225,168],[250,150],[140,170],[178,128],[112,158],[195,160],
+      [55,52],[90,200],[228,128],[268,160],[133,225],[160,140],[205,222],[240,180]
+    ];
+    const remain=Math.max(0, 3-count);
+    const dim=0.30+0.45*(remain/3);              // 0개일때 0.75, 다채우면 0.30
+    let dots='';
+    seed.forEach((s,idx)=>{
+      const r=(idx%6===0?2.1:idx%3===0?1.4:0.9);
+      const tw=2.4+(idx%7)*0.35;
+      const op=dim*(0.55+(idx%4)*0.15);
+      const glow=idx%6===0?' filter="url(#soft)"':'';
+      dots+=`<circle cx="${s[0]}" cy="${s[1]}" r="${r}" fill="#dce8ff" opacity="${op.toFixed(2)}"${glow}>
+        <animate attributeName="opacity" values="${(op*0.35).toFixed(2)};${op.toFixed(2)};${(op*0.35).toFixed(2)}"
+          dur="${tw.toFixed(1)}s" begin="${(idx%11)*0.27}s" repeatCount="indefinite"/></circle>`;
+    });
+    body+=`<g>${dots}</g>`;
+  })();
+
+  // --- radar: concentric grid + rotating sweep (always on) ---
+  body+=`<g opacity=".55">
+      <circle cx="${cx}" cy="${cy}" r="40" fill="none" stroke="rgba(159,196,255,.18)" stroke-width="1"/>
+      <circle cx="${cx}" cy="${cy}" r="80" fill="none" stroke="rgba(159,196,255,.15)" stroke-width="1"/>
+      <circle cx="${cx}" cy="${cy}" r="120" fill="none" stroke="rgba(159,196,255,.12)" stroke-width="1"/>
+      <line x1="${cx-128}" y1="${cy}" x2="${cx+128}" y2="${cy}" stroke="rgba(159,196,255,.1)" stroke-width="1"/>
+      <line x1="${cx}" y1="${cy-128}" x2="${cx}" y2="${cy+128}" stroke="rgba(159,196,255,.1)" stroke-width="1"/>
+    </g>
+    <g>
+      <g transform="rotate(0 ${cx} ${cy})">
+        <animateTransform attributeName="transform" type="rotate"
+          from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="4.5s" repeatCount="indefinite"/>
+        <path d="M${cx},${cy} L${cx+128},${cy} A128,128 0 0,1 ${cx+90.5},${cy+90.5} Z"
+          fill="url(#sweep)" opacity=".5"/>
+        <line x1="${cx}" y1="${cy}" x2="${cx+128}" y2="${cy}" stroke="#9fc4ff" stroke-width="1.4" opacity=".7"/>
+      </g>
+    </g>`;
+
+  // --- confirmed route line (2+ planets) : flowing dash ---
+  if(count>=2){
+    const pts=PLANETS.slice(0,count).map(p=>`${p.x},${p.y}`).join(' ');
+    body+=`<polyline points="${pts}" fill="none" stroke="url(#route)" stroke-width="2"
+        stroke-linecap="round" stroke-dasharray="2 7" opacity=".85">
+        <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.1s" repeatCount="indefinite"/>
+      </polyline>`;
+  }
+
+  // --- "다음 경로 안내" seeking line: from last planet toward next, end pulses ---
+  if(seeking && count>=1 && count<3){
+    const a=PLANETS[count-1], b=PLANETS[count];
+    const mx=a.x+(b.x-a.x)*0.74, my=a.y+(b.y-a.y)*0.74;
+    body+=`<path d="M${a.x},${a.y} L${mx},${my}" fill="none" stroke="#9fc4ff" stroke-width="2"
+        stroke-linecap="round" stroke-dasharray="1 8" opacity=".9">
+        <animate attributeName="stroke-dashoffset" from="0" to="-27" dur="0.9s" repeatCount="indefinite"/>
+      </path>
+      <g transform="translate(${mx},${my})">
+        <circle r="6" fill="none" stroke="#9fc4ff" stroke-width="1.4" opacity=".9">
+          <animate attributeName="r" values="4;11;4" dur="1.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values=".9;0;.9" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+        <circle r="3" fill="#dbe8ff">
+          <animate attributeName="opacity" values=".5;1;.5" dur="1.2s" repeatCount="indefinite"/>
+        </circle>
+        <text y="-12" text-anchor="middle" font-size="9" fill="#9fc4ff" opacity=".85">다음 항로?</text>
+      </g>`;
+  }
+
+  // --- planets ---
+  for(let k=0;k<3;k++){
+    const p=PLANETS[k], on=k<count;
+    const gid='pg'+k;
+    defs+=`<radialGradient id="${gid}" cx="38%" cy="32%">
+        <stop offset="0%" stop-color="${p.c1}"/>
+        <stop offset="55%" stop-color="${p.c2}"/>
+        <stop offset="100%" stop-color="#0b1640"/></radialGradient>`;
+    if(on){
+      // floating bob group (slight vertical drift, staggered)
+      const delay=(k*0.5).toFixed(2);
+      const ring = p.ring? `<ellipse rx="22" ry="6.5" fill="none" stroke="${p.c1}" stroke-width="1.3"
+            opacity=".7" transform="rotate(-18)"/>`:'';
+      body+=`<g transform="translate(${p.x},${p.y})" filter="url(#soft)">
+          <animateTransform attributeName="transform" type="translate" additive="sum"
+            values="0,0; 0,-3.5; 0,0" dur="${(3.2+k*0.4).toFixed(1)}s" begin="${delay}s"
+            repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1; 0.45 0 0.55 1" keyTimes="0;0.5;1"/>
+          <circle r="15" fill="${p.c2}" opacity=".18"/>
+          ${ring}
+          <circle r="11.5" fill="url(#${gid})" stroke="rgba(255,255,255,.45)" stroke-width=".6"/>
+          <circle cx="-3.5" cy="-4" r="3" fill="#fff" opacity=".5"/>
+        </g>
+        <text class="plabel" x="${p.x}" y="${p.y+25}" text-anchor="middle">${p.name}</text>`;
+    } else {
+      body+=`<circle cx="${p.x}" cy="${p.y}" r="6" fill="rgba(159,196,255,.08)"
+          stroke="rgba(159,196,255,.25)" stroke-width="1" stroke-dasharray="2 3"/>`;
+    }
+  }
+
+  // --- ship ---
+  if(count>0){
+    if(animate && count>=3){
+      const path=`M${PLANETS[0].x},${PLANETS[0].y} L${PLANETS[1].x},${PLANETS[1].y} L${PLANETS[2].x},${PLANETS[2].y}`;
+      body+=`<g filter="url(#soft)">
+          <circle r="3" fill="#dbe8ff" opacity=".6">
+            <animateMotion dur="4s" repeatCount="indefinite" path="${path}" keyPoints="0;1" keyTimes="0;1" calcMode="linear" begin="-0.18s"/>
+          </circle>
+          <circle r="2" fill="#9fc4ff" opacity=".4">
+            <animateMotion dur="4s" repeatCount="indefinite" path="${path}" begin="-0.34s"/>
+          </circle>
+          <text font-size="19" text-anchor="middle">
+            <animateMotion dur="4s" repeatCount="indefinite" rotate="auto" path="${path}"/>🚀</text>
+        </g>`;
+    } else {
+      const last=PLANETS[count-1];
+      body+=`<text x="${last.x+13}" y="${last.y-11}" font-size="17" filter="url(#soft)">🚀</text>`;
+    }
+  }
+
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet"><defs>
+      <radialGradient id="neb" cx="50%" cy="50%">
+        <stop offset="0%" stop-color="#2a3f9e" stop-opacity=".5"/>
+        <stop offset="60%" stop-color="#16235f" stop-opacity=".22"/>
+        <stop offset="100%" stop-color="#0a1545" stop-opacity="0"/></radialGradient>
+      <linearGradient id="route" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#dbe8ff"/><stop offset="100%" stop-color="#5f86e6"/></linearGradient>
+      <linearGradient id="sweep" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#9fc4ff" stop-opacity=".55"/>
+        <stop offset="100%" stop-color="#9fc4ff" stop-opacity="0"/></linearGradient>
+      <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="2.4" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      ${defs}
+    </defs>${body}</svg>`;
+}
+
+let scanned=0,routeChoice=null,stamps=0; // stamps: 5개 누적(행성3+선배1+키트1)
+// 스탬프 5칸 렌더 (filled개 채움)
+function stampRow(filled){
+  let s='';
+  for(let k=0;k<5;k++) s+=`<b class="${k<filled?'fill':''}">${k<filled?'★':(k+1)}</b>`;
+  return `<div class="signals">${s}</div>`;
+}
+
+// map:true 인 단계에서 상단 미니맵 표시
+const steps=[
+ { zone:'WELCOME', next:'시작하기',
+   html:()=>`<div class="book">✦</div>
+     <div class="display"><span class="uni">Major Universe</span>
+     <span class="sub">전공을 넘어 · 나를 설계하다</span></div>
+     <div class="hint">2026 서울대학교 전공탐색주간 · 9.14–18 SNU Commons</div>` },
+
+ { zone:'SIGN UP', next:'가입하고 시작', gate:'form',
+   html:()=>`<span class="tag">탐험 시작 전 · 등록</span>
+     <h2 class="q">우주선에 탑승하려면<br>먼저 등록이 필요해</h2>
+     <div class="form">
+       <div class="field"><label>이름</label><input id="f_name" placeholder="홍길동"></div>
+       <div class="field"><label>연락처</label><input id="f_tel" placeholder="010-0000-0000"></div>
+       <div class="field"><label>학번</label><input id="f_no" placeholder="2026-00000"></div>
+       <div class="field"><label>전공(소속)</label><input id="f_major" placeholder="자유전공학부"></div>
+     </div>` },
+
+ { zone:'PRELUDE', next:'좌표 받았어',
+   html:()=>`${A}
+     <div class="bubble">오케이, 연결됐다. 이제 시작이야.</div>
+     <div class="bubble"><b>9월 14일</b>, 중앙도서관으로 와. 본관 1층 SNU Commons.</div>
+     <div class="bubble">오면 알아. 왜 내가 자꾸 너 찾았는지. 책 한 권이 너 기다리고 있어 — 펴봐. 거기서부터니까.</div>` },
+
+ { zone:'PROLOGUE', next:'행성 스캔하러 가기', map:true,
+   html:()=>`${A}
+     <div class="bubble">어, 들어왔네. 기다렸어.</div>
+     <div class="bubble">거기 전공 수백 개 떠 있지? 막막한 거 알아. 나도 딱 너 같았거든.</div>
+     <div class="bubble">규칙은 간단해. <b>내 항로를 찾아야 해.</b> 일단 <b>아무 행성이나 하나 골라서 스캔해봐.</b> 거기서부터 항로가 시작돼.</div>` },
+
+ // 첫 행성 직접 스캔
+ { zone:'MAJOR FIELD', next:'다음 항로 보기', gate:'scanFirst', map:true,
+   html:()=>`<span class="tag">첫 번째 행성 · 전공카드 스캔</span>
+     <div class="bubble">관심 가는 행성 앞에서 전공카드를 스캔해봐. 어떤 행성이든 괜찮아 — 위 맵에 바로 등록될 거야.</div>
+     <div class="cards"><div class="card" id="scanBtn1"><div class="ic">📷</div>
+       <div><div>전공카드 QR 스캔하기</div><div class="meta">첫 행성을 나의 항로에 등록</div></div></div></div>
+     <div class="scan-hint" id="scanHint1">스캔하면 맵에 행성이 실시간으로 그려져</div>` },
+
+ // 1번째 행성 등록됨 — 자세히 보기 / 다음 항로
+ { zone:'MAJOR FIELD', next:'다음 항로 보기', gate:'arrived', map:true, seek:true, idx:0,
+   html:()=>`${A}
+     <div class="bubble">좋아, 첫 신호 잡혔다. <b style="color:var(--gold)">✓ 1/3</b> 맵에 <b>경제학부</b> 행성이 떴어.</div>
+     <div class="cards">
+       <div class="card" id="moreBtn"><div class="ic">🔭</div><div><div>경제학부 자세히 보기</div><div class="meta">이 행성은 어떤 전공일까</div></div></div>
+     </div>
+     <div id="moreBox"></div>` },
+
+ // 다음 항로 추천 목록 (2번째) — 추천이 텍스트로 떠 있고, 보고서 그 행성에 가서 스캔
+ { zone:'MAJOR FIELD', next:'그 행성으로 가기', map:true, seek:true, idx:1,
+   html:()=>`${A}
+     <div class="bubble">다음은 어디로 갈까? 네 항로에 맞는 행성을 추천해줄게. 마음에 드는 행성 앞으로 가서 스캔하면 돼.</div>
+     <div class="cards">
+       <div class="card" style="cursor:default"><div class="ic">🛰</div><div><div>교수 추천 · 데이터사이언스</div><div class="meta">경제학부와 시너지가 높은 항로</div></div></div>
+       <div class="card" style="cursor:default"><div class="ic">✦</div><div><div>다들 많이 간 길 · 심리학과</div><div class="meta">참여자 선택 알고리즘 · 인기순</div></div></div>
+     </div>
+     <div class="scan-hint">추천받은 행성 앞으로 가서 카드를 스캔하자</div>` },
+
+ // 2번째 행성 스캔
+ { zone:'MAJOR FIELD', next:'다음 항로 보기', gate:'scanNext', map:true, idx:1,
+   html:()=>`<span class="tag">추천 항로 · 전공카드 스캔</span>
+     <div class="bubble">맵이 가리키는 행성 앞에 왔어. 전공카드를 스캔해서 항로에 등록하자.</div>
+     <div class="cards"><div class="card" id="scanBtn2"><div class="ic">📷</div>
+       <div><div>전공카드 QR 스캔하기</div><div class="meta">두 번째 행성을 항로에 등록</div></div></div></div>
+     <div class="scan-hint" id="scanHint2">스캔하면 맵에 행성이 이어져</div>` },
+
+ // 다음 항로 추천 (3번째)
+ { zone:'MAJOR FIELD', next:'그 행성으로 가기', map:true, seek:true, idx:2,
+   html:()=>`${A}
+     <div class="bubble">(2/3) <b style="color:var(--gold)">✓</b> 두 행성이 이어졌네. 마지막 항로 하나 더.</div>
+     <div class="cards">
+       <div class="card" style="cursor:default"><div class="ic">✦</div><div><div>다들 많이 간 길 · 심리학과</div><div class="meta">데이터사이언스 다음으로 많이 간 길</div></div></div>
+     </div>
+     <div class="scan-hint">마지막 행성 앞으로 가서 스캔하자</div>` },
+
+ // 3번째 행성 스캔
+ { zone:'MAJOR FIELD', next:'선배 이야기 듣기', gate:'scanLast', map:true, idx:2,
+   html:()=>`<span class="tag">마지막 행성 · 전공카드 스캔</span>
+     <div class="bubble">마지막 행성 앞이야. 스캔해서 항로를 완성하자.</div>
+     <div class="cards"><div class="card" id="scanBtn3"><div class="ic">📷</div>
+       <div><div>전공카드 QR 스캔하기</div><div class="meta">세 번째 행성을 항로에 등록</div></div></div></div>
+     <div class="scan-hint" id="scanHint3">스캔하면 너만의 항로가 완성돼</div>` },
+
+ { zone:'MAJOR FIELD', next:'선배 이야기 듣기', map:true,
+   html:()=>`${A}
+     <div class="bubble">(3/3) <b style="color:var(--gold)">✓</b> 위에 봐, 행성 셋이 선으로 이어졌어.</div>
+     <div class="bubble">이거 누구 것도 아닌 <b>너만의 항로</b>야. 근데 혼자 정하긴 좀 그렇지.</div>` },
+
+ { zone:'CREW · CENTER · CHAT', next:'스탬프 받으러 가기', gate:'channel', map:true,
+   html:()=>`${A}
+     <div class="bubble">먼저 가본 사람들 있어 — 편한 걸로 하나 골라. 셋은 독립적으로 열려 있어.</div>
+     <div class="cards">
+       <div class="card" data-ch="크루 스테이션"><div class="ic">🎙</div><div><div>크루 스테이션</div><div class="meta">선배가 직접 들려주는 이야기 · 오늘 14:00</div></div></div>
+       <div class="card" data-ch="항행 지원 센터"><div class="ic">🧭</div><div><div>항행 지원 센터</div><div class="meta">전설센터에서 항로 점검 상담</div></div></div>
+       <div class="card" data-ch="챗봇"><div class="ic">💬</div><div><div>나한테 물어보기</div><div class="meta">챗봇으로 가볍게 · 커리큘럼/이수요건</div></div></div>
+     </div>
+     <div class="scan-hint" id="chHint">관여하고 싶은 만큼 골라</div>` },
+
+ // 선배 이야기 스탬프 적립 (4번째 신호)
+ { zone:'STAMP', next:'키트 만들러 가기', gate:'stamp', map:true,
+   html:()=>`<span class="tag" id="stampTag">선배의 이야기 · 네 번째 신호</span>
+     <h2 class="q" id="stampQ">상담 잘 받았어?</h2>
+     <div class="bubble" id="stampMsg">이야기 다 들었으면, 부스에 있는 스탬프 QR을 찍어.</div>
+     <div class="cards"><div class="card" id="stampBtn"><div class="ic">📷</div>
+       <div><div id="stampBtnLabel">부스 스탬프 QR 스캔하기</div><div class="meta">선배의 이야기 신호 적립</div></div></div></div>
+     <div id="stampSignals"></div>
+     <div class="scan-hint" id="stampHint">QR을 찍으면 네 번째 신호가 적립돼</div>` },
+
+ // 키트 제작 = 다섯 번째(마지막) 신호
+ { zone:'KIT LAB', next:'나의 항로 보기', gate:'kit', map:true,
+   html:()=>`${A}
+     <div class="bubble">잠깐. 본격적으로 떠나기 전에 — <b>보급품 없이 가려고?</b></div>
+     <div class="bubble">키트 제작 랩 들러서 알파벳 세 개랑 너 닮은 거 하나 골라 끼워. 세상에 하나뿐인 <b>너만의 보급품 🔑</b>. 그게 마지막 신호야.</div>
+     <div class="cards"><div class="card" id="kitBtn"><div class="ic">🔧</div>
+       <div><div id="kitBtnLabel">키트 제작 완료 · 스탬프 QR 스캔</div><div class="meta">다섯 번째 신호 — 항로가 깨어난다</div></div></div></div>
+     <div id="kitSignals"></div>
+     <div class="scan-hint" id="kitHint">보급품을 챙기면 마지막 신호가 채워져</div>` },
+
+ { zone:'MY ROUTE', next:'??? 의 정체 보기',
+   html:()=>`<span class="tag">나만의 항로 · 우주선 항행</span>
+     <h2 class="q">네가 그린 항로야</h2>
+     <div class="routewrap" style="height:300px">${planetSvg(3,{animate:true})}</div>
+     <div class="hint">모은 행성 사이를 너의 우주선이 항행하는 중 · 마이페이지 저장됨</div>` },
+
+ { zone:'EPILOGUE', next:'다시 처음으로',
+   html:()=>`${A}
+     <div class="bubble">여기까지 잘 왔어. 이제 진짜 마지막이야.</div>
+     <div class="bubble">내가 누군지 아직 안 알려줬지. <b>알고 싶으면 포토존으로 와.</b></div>
+     <div class="card" style="cursor:default;border-color:rgba(232,217,168,.5)">
+       <div class="ic">📸</div><div><div>에필로그 게이트 (포토존 · 케이브2)</div>
+       <div class="meta">키오스크에 네 QR을 스캔하면 — 정체 공개</div></div></div>` },
+];
+
+let i=0;
+const stage=document.getElementById('stage'),prog=document.getElementById('prog'),
+  zone=document.getElementById('zone'),label=document.getElementById('stepLabel'),
+  next=document.getElementById('next'),back=document.getElementById('back'),
+  minimap=document.getElementById('minimap'),mmsvg=document.getElementById('mmsvg'),
+  mmcount=document.getElementById('mmcount');
+prog.innerHTML=steps.map(()=>'<span></span>').join('');
+
+function updateMap(opt){
+  mmsvg.innerHTML=planetSvg(scanned, opt||{});
+  mmcount.textContent=`${scanned} / 3 행성`;
+}
+
+function bindGates(s){
+  if(s.gate==='form'){
+    const ids=['f_name','f_tel','f_no','f_major'];
+    const chk=()=>{next.disabled=!ids.every(id=>document.getElementById(id).value.trim());};
+    ids.forEach(id=>document.getElementById(id).addEventListener('input',chk));chk();
+  }
+  if(s.gate==='scanFirst'){
+    next.disabled=true;
+    document.getElementById('scanBtn1').onclick=()=>{
+      scanned=1; updateMap({seeking:true});
+      document.getElementById('scanHint1').innerHTML='<b style="color:var(--gold)">경제학부</b> 행성 등록 ✓ (1/3)';
+      next.disabled=false;
+    };
+  }
+  if(s.gate==='arrived'){
+    updateMap({seeking:true});
+    const box=document.getElementById('moreBox'), btn=document.getElementById('moreBtn');
+    let open=false;
+    btn.onclick=()=>{
+      open=!open;
+      box.innerHTML=open?`<div class="bubble" style="margin-top:9px">${PLANETS[0].desc}</div>`:'';
+      btn.style.borderColor=open?'var(--ice)':'var(--line)';
+    };
+  }
+  if(s.gate==='scanNext'){
+    next.disabled=true;
+    document.getElementById('scanBtn2').onclick=()=>{
+      scanned=2; updateMap({seeking:true});
+      document.getElementById('scanHint2').innerHTML='<b style="color:var(--gold)">데이터사이언스</b> 행성 등록 ✓ (2/3)';
+      next.disabled=false;
+    };
+  }
+  if(s.gate==='scanLast'){
+    next.disabled=true;
+    document.getElementById('scanBtn3').onclick=()=>{
+      scanned=3; updateMap();
+      document.getElementById('scanHint3').innerHTML='<b style="color:var(--gold)">심리학과</b> 행성 등록 ✓ (3/3) — 항로 완성!';
+      next.disabled=false;
+    };
+  }
+  if(s.gate==='channel'){
+    next.disabled=true;
+    stamps=3; // 행성 3개 = 신호 3
+    document.querySelectorAll('[data-ch]').forEach(c=>c.onclick=function(){
+      document.querySelectorAll('[data-ch]').forEach(x=>{x.style.opacity=.45;x.style.borderColor='var(--line)';});
+      this.style.opacity=1;this.style.borderColor='var(--ice)';this.style.background='rgba(28,45,110,.8)';
+      routeChoice=this.dataset.ch;
+      document.getElementById('chHint').innerHTML=`<b style="color:var(--gold)">${routeChoice}</b> 선택 · 이야기를 들으러 가자`;
+      next.disabled=false;});
+  }
+  if(s.gate==='stamp'){
+    next.disabled=true;
+    const ch=routeChoice||'선배';
+    const q=document.getElementById('stampQ'), msg=document.getElementById('stampMsg'),
+      btn=document.getElementById('stampBtnLabel'), sig=document.getElementById('stampSignals');
+    sig.innerHTML=stampRow(3); // 현재 3개(행성)
+    if(ch==='챗봇'){
+      q.textContent='챗봇이랑 얘기 끝났어?';
+      msg.innerHTML='챗봇은 항로 진단 결과 카드가 도착하면 신호가 <b>자동 적립</b>돼. 결과 카드 받아봐.';
+      btn.textContent='항로 진단 결과 카드 받기';
+    }else{
+      q.textContent=ch+' 상담 잘 받았어?';
+      msg.innerHTML=`이야기 다 들었으면, ${ch} 부스의 <b>스탬프 QR</b>을 찍어.`;
+      btn.textContent=ch+' 스탬프 QR 스캔하기';
+    }
+    document.getElementById('stampBtn').onclick=()=>{
+      stamps=4;
+      sig.innerHTML=stampRow(4);
+      document.getElementById('stampHint').innerHTML='<b style="color:var(--gold)">선배의 이야기</b> 신호 적립 ✓ (4/5) — 마지막 하나 남았어';
+      next.disabled=false;
+    };
+  }
+  if(s.gate==='kit'){
+    next.disabled=true;
+    const sig=document.getElementById('kitSignals');
+    sig.innerHTML=stampRow(4); // 4개 채워진 상태, 마지막 1칸 비어있음
+    document.getElementById('kitBtn').onclick=()=>{
+      stamps=5;
+      sig.innerHTML=stampRow(5);
+      document.getElementById('kitHint').innerHTML='<b style="color:var(--gold)">너만의 보급품</b> 챙김 ✓ (5/5) — 신호 다 모았어, 항로가 깨어난다';
+      next.disabled=false;
+    };
+  }
+}
+function render(){
+  const s=steps[i];
+  stage.innerHTML=(typeof s.html==='function'?s.html():s.html);
+  stage.scrollTop=0;
+  zone.textContent=s.zone;
+  label.textContent=String(i+1).padStart(2,'0')+' / '+String(steps.length).padStart(2,'0');
+  next.textContent=s.next;next.disabled=false;
+  minimap.classList.toggle('show', !!s.map);
+  if(s.map) updateMap(s.seek?{seeking:true}:{});
+  [...prog.children].forEach((d,k)=>d.classList.toggle('on',k<=i));
+  back.style.visibility=i===0?'hidden':'visible';
+  bindGates(s);
+}
+next.onclick=()=>{if(next.disabled)return;i=(i+1)%steps.length; if(i===0){scanned=0;routeChoice=null;stamps=0;} render();};
+back.onclick=()=>{if(i>0){i--;render();}};
+render();
+</script>
