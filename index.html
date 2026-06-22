@@ -433,13 +433,14 @@ const steps=[
      <div class="routewrap" style="height:300px">${planetSvg(3,{animate:true})}</div>
      <div class="hint">모은 행성 사이를 너의 우주선이 항행하는 중 · 마이페이지 저장됨</div>` },
 
- { zone:'EPILOGUE', next:'다시 처음으로',
+ { zone:'EPILOGUE', next:'다시 처음으로', gate:'epilogue',
    html:()=>`${A}
-     <div class="bubble">여기까지 잘 왔어. 이제 진짜 마지막이야.</div>
-     <div class="bubble">내가 누군지 아직 안 알려줬지. <b>알고 싶으면 포토존으로 와.</b></div>
-     <div class="card" style="cursor:default;border-color:rgba(232,217,168,.5)">
-       <div class="ic">📸</div><div><div>에필로그 게이트 (포토존 · 케이브2)</div>
-       <div class="meta">키오스크에 네 QR을 스캔하면 — 정체 공개</div></div></div>` },
+     <div class="bubble">여기까지 잘 왔어. 신호도 다 모았고, 항로도 그렸지.</div>
+     <div class="bubble">근데 내가 누군지는 아직 안 알려줬잖아. 그건 <b>여기서는 못 봐.</b></div>
+     <div class="bubble"><b>포토존(에필로그 게이트)</b>에 가면 QR이 하나 있어. 그걸 스캔하면 — 내가 너한테 쓴 <b>편지</b>가 열려. 마지막 히든 미션이야. 🌌</div>
+     <div class="cards"><div class="card" id="hiddenBtn"><div class="ic">📸</div>
+       <div><div>마지막 편지 열기</div><div class="meta">포토존 QR을 스캔해야 열려</div></div></div></div>
+     <div class="scan-hint" id="hiddenHint">버튼을 눌러봐</div>` },
 ];
 
 let i=0;
@@ -536,6 +537,13 @@ function bindGates(s){
       sig.innerHTML=stampRow(5);
       document.getElementById('kitHint').innerHTML='<b style="color:var(--gold)">너만의 보급품</b> 챙김 ✓ (5/5) — 신호 다 모았어, 항로가 깨어난다';
       next.disabled=false;
+    };
+  }
+  if(s.gate==='epilogue'){
+    const btn=document.getElementById('hiddenBtn'), hint=document.getElementById('hiddenHint');
+    btn.onclick=()=>{
+      btn.style.borderColor='var(--gold)';
+      hint.innerHTML='📸 <b style="color:var(--gold)">포토존(에필로그 게이트)으로 가서 QR을 스캔</b>해야 편지가 열려 — 마지막 미션은 현장에서!';
     };
   }
 }
